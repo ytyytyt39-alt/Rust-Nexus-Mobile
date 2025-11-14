@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rust Nexus Mobile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 30px rgba(240, 147, 251, 0.4), 0 0 60px rgba(102, 126, 234, 0.2); }
+            50% { box-shadow: 0 0 50px rgba(240, 147, 251, 0.6), 0 0 100px rgba(102, 126, 234, 0.4); }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        @keyframes particle {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-1000px) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(102, 126, 234, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(240, 147, 251, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: particle linear infinite;
+        }
+
+        .particle:nth-child(1) { left: 10%; animation-duration: 15s; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 20%; animation-duration: 18s; animation-delay: 2s; }
+        .particle:nth-child(3) { left: 30%; animation-duration: 12s; animation-delay: 4s; }
+        .particle:nth-child(4) { left: 40%; animation-duration: 20s; animation-delay: 1s; }
+        .particle:nth-child(5) { left: 50%; animation-duration: 16s; animation-delay: 3s; }
+        .particle:nth-child(6) { left: 60%; animation-duration: 14s; animation-delay: 5s; }
+        .particle:nth-child(7) { left: 70%; animation-duration: 17s; animation-delay: 2s; }
+        .particle:nth-child(8) { left: 80%; animation-duration: 19s; animation-delay: 0s; }
+        .particle:nth-child(9) { left: 90%; animation-duration: 13s; animation-delay: 4s; }
+        .particle:nth-child(10) { left: 95%; animation-duration: 21s; animation-delay: 1s; }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            text-align: center;
+            padding: 80px 20px 60px;
+            animation: fadeInDown 1.2s ease;
+        }
+
+        .logo-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 5.5em;
+            font-weight: 900;
+            text-transform: uppercase;
+            background: linear-gradient(45deg, #fff, #f093fb, #667eea, #fff);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s linear infinite, float 3s ease-in-out infinite;
+            letter-spacing: 8px;
+            text-shadow: 0 0 80px rgba(240, 147, 251, 0.5);
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
+        }
+
+        .logo-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120%;
+            height: 120%;
+            background: radial-gradient(circle, rgba(240, 147, 251, 0.3), transparent 70%);
+            filter: blur(40px);
+            animation: glow 2s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        .subtitle {
+            font-size: 1.8em;
+            font-weight: 300;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            opacity: 0.95;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.9), rgba(56, 142, 60, 0.9));
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: bold;
+            box-shadow: 0 5px 25px rgba(76, 175, 80, 0.4);
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        .status-badge::before {
+            content: '●';
+            color: #4caf50;
+            margin-right: 10px;
+            font-size: 1.3em;
+            animation: glow 1s ease-in-out infinite;
+        }
+
+        .glass-section {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 50px;
+            margin: 40px 0;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            animation: fadeInUp 1s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.05), transparent 70%);
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .section-title {
+            font-size: 2.8em;
+            margin-bottom: 40px;
+            text-align: center;
+            background: linear-gradient(45deg, #fff, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            position: relative;
+            text-shadow: 0 0 30px rgba(240, 147, 251, 0.5);
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #f093fb, transparent);
+            margin: 20px auto 0;
+            border-radius: 2px;
+        }
+
+        .server-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+            padding: 35px;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.4s;
+            z-index: -1;
+        }
+
+        .info-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(240, 147, 251, 0.5);
+        }
+
+        .info-card:hover::before {
+            opacity: 1;
+        }
+
+        .info-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 5px 15px rgba(240, 147, 251, 0.5));
+        }
+
+        .info-card h3 {
+            color: #f093fb;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .info-card p {
+            font-size: 1.3em;
+            font-weight: 600;
+            word-break: break-all;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, rgba(255, 152, 0, 0.25), rgba(255, 87, 34, 0.25));
+            border: 2px solid rgba(255, 152, 0, 0.7);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 40px 0;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            animation: glow 3s ease-in-out infinite;
+            box-shadow: 0 10px 40px rgba(255, 152, 0, 0.3);
+        }
+
+        .warning-box h3 {
+            color: #ffa726;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .warning-box p {
+            font-size: 1.3em;
+            font-weight: 500;
+        }
+
+        .telegram-section {
+            text-align: center;
+            margin: 50px 0;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .telegram-btn {
+            background: linear-gradient(135deg, #0088cc, #00aced, #0088cc);
+            background-size: 200% auto;
+            padding: 25px 60px;
+            border-radius: 60px;
+            color: white;
+            font-size: 1.5em;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 40px rgba(0, 136, 204, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .telegram-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent 70%);
+            transform: scale(0);
+            transition: transform 0.6s;
+        }
+
+        .telegram-btn:hover::before {
+            transform: scale(1);
+        }
+
+        .telegram-btn:hover {
+            background-position: right center;
+            box-shadow: 0 15px 60px rgba(0, 172, 237, 0.7);
+            transform: translateY(-5px) scale(1.05);
+        }
+
+        .donate-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 35px;
+            margin: 50px 0;
+        }
+
+        .donate-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+            border: 2px solid rgba(240, 147, 251, 0.6);
+            border-radius: 25px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(15px);
+        }
+
+        .donate-card::before {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            width: 300%;
+            height: 300%;
+            background: conic-gradient(from 0deg, transparent, rgba(240, 147, 251, 0.3), transparent 30%);
+            animation: float 8s linear infinite;
+        }
+
+        .donate-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 25px;
+            padding: 2px;
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .donate-card:hover {
+            transform: translateY(-15px) scale(1.05);
+            box-shadow: 0 25px 70px rgba(240, 147, 251, 0.6);
+            border-color: #f093fb;
+        }
+
+        .donate-card:hover::after {
+            opacity: 1;
+        }
+
+        .rank-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 193, 7, 0.3));
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 215, 0, 0.5);
+            font-weight: 600;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .donate-card h3 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #fff, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 30px rgba(240, 147, 251, 0.5);
+            position: relative;
+            z-index: 1;
+        }
+
+        .donate-card .price {
+            font-size: 2.5em;
+            font-weight: 900;
+            color: #fff;
+            margin: 20px 0;
+            text-shadow: 0 5px 20px rgba(240, 147, 251, 0.7);
+            position: relative;
+            z-index: 1;
+        }
+
+        .donate-card .duration {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 25px;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+
+        .buy-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2, #667eea);
+            background-size: 200% auto;
+            border: none;
+            padding: 18px 50px;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 35px rgba(102, 126, 234, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .buy-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .buy-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .buy-btn:hover {
+            background-position: right center;
+            box-shadow: 0 15px 50px rgba(118, 75, 162, 0.8);
+            transform: translateY(-3px) scale(1.05);
+            border-color: #f093fb;
+        }
+
+        .contact-info {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 1.4em;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .contact-info a {
+            color: #f093fb;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s;
+            text-shadow: 0 2px 10px rgba(240, 147, 251, 0.5);
+        }
+
+        .contact-info a:hover {
+            color: #fff;
+            text-shadow: 0 0 20px rgba(240, 147, 251, 0.8);
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 60px;
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 3em;
+                letter-spacing: 4px;
+            }
+            
+            .subtitle {
+                font-size: 1.3em;
+            }
+            
+            .glass-section {
+                padding: 30px 20px;
+            }
+            
+            .section-title {
+                font-size: 2em;
+            }
+            
+            .donate-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .server-info {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                padding: 40px 20px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <div class="logo-glow"></div>
+                <div class="logo">RUST NEXUS</div>
+            </div>
+            <div class="subtitle">Mobile Server</div>
+            <div class="status-badge">Сервер Онлайн</div>
+        </header>
+
+        <div class="glass-section">
+            <h2 class="section-title">🎮 Как Зайти</h2>
+            <div class="server-info">
+                <div class="info-card">
+                    <div class="info-icon">📱</div>
+                    <h3>Версия</h3>
+                    <p>1.21.50</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">🌐</div>
+                    <h3>IP Адрес</h3>
+                    <p>g-pl-2.apexnodes.xyz</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">🔌</div>
+                    <h3>Порт</h3>
+                    <p>21025</p>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <h3>⚠️ Важная Информация!</h3>
+                <p>Для входа на сервер необходим вайт-лист</p>
+            </div>
+        </div>
+
+        <div class="telegram-section">
+            <a href="https://t.me/RUST_MINEKRAFT" target="_blank" class="telegram-btn">
+                📱 Telegram Канал
+            </a>
+        </div>
+
+        <div class="glass-section">
+            <h2 class="section-title">💎 Донат Привилегии</h2>
+            <div class="donate-grid">
+                <div class="donate-card">
+                    <div class="rank-badge">⭐ Starter</div>
+                    <h3>Survivor</h3>
+                    <div class="price">50 ₴</div>
+                    <div class="duration">📅 30 дней</div>
+                    <a href="https://t.me/nexus1487" target="_blank" class="buy-btn">Купить</a>
+                </div>
+
+                <div class="donate-card">
+                    <div class="rank-badge">⭐⭐ Basic</div>
+                    <h3>Raider</h3>
+                    <div class="price">75 ₴</div>
+                    <div class="duration">📅 30 дней</div>
+                    <a href="https://t.me/nexus1487" target="_blank" class="buy-btn">Купить</a>
+                </div>
+
+                <div class="donate-card">
+                    <div class="rank-badge">⭐⭐⭐ Advanced</div>
+                    <h3>VIP</h3>
+                    <div class="price">105 ₴</div>
+                    <div class="duration">📅 30 дней</div>
+                    <a href="https://t.me/nexus1487" target="_blank" class="buy-btn">Купить</a>
+                </div>
+
+                <div class="donate-card">
+                    <div class="rank-badge">💎 Premium</div>
+                    <h3>Premium</h3>
+                    <div class="price">165 ₴</div>
+                    <div class="duration">📅 30 дней</div>
+                    <a href="https://t.me/nexus1487" target="_blank" class="buy-btn">Купить</a>
+                </div>
+
+                <div class="donate-card">
+                    <div class="rank-badge">💎💎 Elite</div>
+                    <h3>Elite</h3>
+                    <div class="price">220 ₴</div>
+                    <div class="duration">📅 30 дней</div>
+                    <a href="https://t.me/nexus1487" target="_blank" class="buy-btn">Купить</a>
+                </div>
+
+                <div class="donate-card">
+                    <div class="rank-badge">👑 Royal</div>
+                    <h3>King</h3>
+                    <div class="price">285 ₴</div>
+                    <div class="duration">📅 30 дней</div>
+                    <a href="https://t.me/nexus1487" target="_blank" class="buy-btn">Купить</a>
+                </div>
+
+                <div class="donate-card">
+                    <div class="rank-badge">🌟 Ultimate</div>
+                    <h3>Sponsor</h3>
+                    <div class="price">415 ₴</div>
+                    <div class="duration">📅 30 дней</div>
+                    <a href="https://t.me/nexus1487" target="_blank" class="buy-btn">Купить</a>
+                </div>
+            </div>
+
+            <div class="contact-info">
+                <p>💬 Для покупки доната обращайтесь: <a href="https://t.me/nexus1487" target="_blank">@nexus1487</a></p>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2024 Rust Nexus Mobile | Лучший сервер Minecraft PE</p>
+        </footer>
+    </div>
+</body>
+</html>
